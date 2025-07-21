@@ -18,10 +18,6 @@ public class UserController {
 
     @GetMapping
     public String userProfile(Authentication authentication, Model model) {
-        System.out.println("=== UserController DEBUG ===");
-        System.out.println("Authentication: " + authentication);
-        System.out.println("Username: " + authentication.getName());
-        System.out.println("Authorities: " + authentication.getAuthorities());
 
         String username = authentication.getName();
         User user = userService.getUserByUsername(username);

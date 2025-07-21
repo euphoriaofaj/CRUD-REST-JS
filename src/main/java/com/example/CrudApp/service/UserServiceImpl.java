@@ -6,13 +6,11 @@ import com.example.CrudApp.repository.RoleRepository;
 import com.example.CrudApp.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -56,6 +54,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void saveUser(User user, String[] roleIds) {
+        if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+            throw new RuntimeException("Password is required");
+        }
+
         Set<Role> roles = new HashSet<>();
         if (roleIds != null) {
             for (String roleIdStr : roleIds) {
@@ -65,10 +67,10 @@ public class UserServiceImpl implements UserService {
                     if (role != null) {
                         roles.add(role);
                     }
-                } catch (NumberFormatException e) {
-                }
+                } catch (NumberFormatException ignored) {}
             }
         }
+
         user.setRoles(roles);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
@@ -83,7 +85,6 @@ public class UserServiceImpl implements UserService {
             existingUser.setAge(user.getAge());
             existingUser.setEmail(user.getEmail());
 
-
             if (user.getPassword() != null && !user.getPassword().trim().isEmpty()) {
                 existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
             }
@@ -97,17 +98,12 @@ public class UserServiceImpl implements UserService {
                         if (role != null) {
                             roles.add(role);
                         }
-                    } catch (NumberFormatException e) {
-                        System.out.println("Invalid role ID: " + roleIdStr);
-                    }
+                    } catch (NumberFormatException ignored) {}
                 }
                 existingUser.setRoles(roles);
             }
 
-
             userRepository.save(existingUser);
-        } else {
-            System.out.println("User not found with ID: " + user.getId());
         }
     }
 

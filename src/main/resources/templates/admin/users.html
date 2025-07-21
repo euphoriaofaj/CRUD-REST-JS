@@ -19,6 +19,9 @@
         .navbar-dark {
             background-color: #343a40 !important;
         }
+        #newUserFormContainer {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -49,21 +52,20 @@
 
         <div class="col-md-10 main-content">
             <h2>Admin panel</h2>
-            
             <ul class="nav nav-tabs mb-4">
                 <li class="nav-item">
-                    <a class="nav-link active" href="#users-tab">All Users</a>
+                    <a class="nav-link active" href="#" id="allUsersTab" onclick="showUsersTable()">All Users</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#" th:href="@{/admin/new}">New User</a>
+                    <a class="nav-link" href="#" id="newUserTab" onclick="showNewUserForm()">New User</a>
                 </li>
             </ul>
 
-            <h4>All Users</h4>
-
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
+            <div id="usersTableContainer">
+                <h4>All Users</h4>
+                <div class="table-responsive">
+                    <table class="table table-striped" id="usersTable">
+                        <thead>
                         <tr>
                             <th>ID</th>
                             <th>First Name</th>
@@ -74,46 +76,62 @@
                             <th>Edit</th>
                             <th>Delete</th>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="user : ${users}">
-                            <td th:text="${user.id}"></td>
-                            <td th:text="${user.firstName}"></td>
-                            <td th:text="${user.lastName}"></td>
-                            <td th:text="${user.age ?: ''}"></td>
-                            <td th:text="${user.email}"></td>
-                            <td>
-                                <span th:each="role : ${user.roles}" 
-                                      th:text="'[' + ${role.name} + ']'"
-                                      class="me-1"></span>
-                            </td>
-                            <td>
-                                <button class="btn btn-info btn-sm" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#editModal"
-                                        th:data-user-id="${user.id}"
-                                        th:data-first-name="${user.firstName}"
-                                        th:data-last-name="${user.lastName}"
-                                        th:data-age="${user.age}"
-                                        th:data-email="${user.email}"
-                                        th:data-username="${user.username}"
-                                        onclick="loadEditUserFromData(this)">Edit</button>
-                            </td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#deleteModal"
-                                        th:data-user-id="${user.id}"
-                                        th:data-first-name="${user.firstName}"
-                                        th:data-last-name="${user.lastName}"
-                                        th:data-age="${user.age}"
-                                        th:data-email="${user.email}"
-                                        th:data-username="${user.username}"
-                                        onclick="loadDeleteUserFromData(this)">Delete</button>
-                            </td>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td colspan="8" class="text-center">Loading users...</td>
                         </tr>
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="newUserFormContainer">
+                <h4>Add new user</h4>
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <form id="newUserForm">
+                            <div class="mb-3">
+                                <label for="firstName" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="firstName" name="firstName" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="lastName" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="lastName" name="lastName" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="age" class="form-label">Age</label>
+                                <input type="number" class="form-control" id="age" name="age">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Role</label>
+                                <select class="form-select role-select" name="roleIds" multiple size="2"></select>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success">Add new user</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -126,51 +144,40 @@
                 <h5 class="modal-title">Edit user</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="editForm" th:action="@{/admin/save}" method="post">
+            <form id="editUserForm">
                 <div class="modal-body">
                     <input type="hidden" id="editId" name="id">
-                    
                     <div class="mb-3">
                         <label class="form-label">ID</label>
                         <input type="text" class="form-control" id="editIdDisplay" readonly>
                     </div>
-                    
                     <div class="mb-3">
                         <label class="form-label">First Name</label>
                         <input type="text" class="form-control" id="editFirstName" name="firstName" required>
                     </div>
-                    
                     <div class="mb-3">
                         <label class="form-label">Last Name</label>
                         <input type="text" class="form-control" id="editLastName" name="lastName" required>
                     </div>
-                    
                     <div class="mb-3">
                         <label class="form-label">Age</label>
                         <input type="number" class="form-control" id="editAge" name="age">
                     </div>
-                    
                     <div class="mb-3">
                         <label class="form-label">Email</label>
                         <input type="email" class="form-control" id="editEmail" name="email">
                     </div>
-                    
                     <div class="mb-3">
                         <label class="form-label">Username</label>
                         <input type="text" class="form-control" id="editUsername" name="username" required readonly>
                     </div>
-                    
                     <div class="mb-3">
                         <label class="form-label">Password</label>
                         <input type="password" class="form-control" id="editPassword" name="password" placeholder="Leave blank to keep current password">
                     </div>
-                    
                     <div class="mb-3">
                         <label class="form-label">Role</label>
-                        <select class="form-select" id="editRole" name="roleIds" multiple>
-                            <option value="1">ADMIN</option>
-                            <option value="2">USER</option>
-                        </select>
+                        <select class="form-select role-select" id="editRole" name="roleIds" multiple></select>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -190,45 +197,14 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">ID</label>
-                    <input type="text" class="form-control" id="deleteIdDisplay" readonly>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">First Name</label>
-                    <input type="text" class="form-control" id="deleteFirstName" readonly>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">Last Name</label>
-                    <input type="text" class="form-control" id="deleteLastName" readonly>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">Age</label>
-                    <input type="text" class="form-control" id="deleteAge" readonly>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="text" class="form-control" id="deleteEmail" readonly>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">Username</label>
-                    <input type="text" class="form-control" id="deleteUsername" name="username" readonly>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">Password</label>
-                    <input type="password" class="form-control" value="••••••••" name="password" readonly>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">Role</label>
-                    <input type="text" class="form-control" id="deleteRole" name="roles" readonly>
-                </div>
+                <input type="text" class="form-control mb-2" id="deleteIdDisplay" readonly>
+                <input type="text" class="form-control mb-2" id="deleteFirstName" readonly>
+                <input type="text" class="form-control mb-2" id="deleteLastName" readonly>
+                <input type="text" class="form-control mb-2" id="deleteAge" readonly>
+                <input type="text" class="form-control mb-2" id="deleteEmail" readonly>
+                <input type="text" class="form-control mb-2" id="deleteUsername" readonly>
+                <input type="password" class="form-control mb-2" value="••••••••" readonly>
+                <input type="text" class="form-control mb-2" id="deleteRole" readonly>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -240,43 +216,142 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function loadEditUserFromData(button) {
-        const userId = button.getAttribute('data-user-id');
-        const firstName = button.getAttribute('data-first-name');
-        const lastName = button.getAttribute('data-last-name');
-        const age = button.getAttribute('data-age');
-        const email = button.getAttribute('data-email');
-        const username = button.getAttribute('data-username');
-        
-        document.getElementById('editId').value = userId;
-        document.getElementById('editIdDisplay').value = userId;
-        document.getElementById('editFirstName').value = firstName;
-        document.getElementById('editLastName').value = lastName;
-        document.getElementById('editAge').value = age || '';
-        document.getElementById('editEmail').value = email;
-        document.getElementById('editUsername').value = username;
-        document.getElementById('editPassword').value = '';
+    function showUsersTable() {
+        document.getElementById('newUserFormContainer').style.display = 'none';
+        document.getElementById('usersTableContainer').style.display = 'block';
+        document.getElementById('newUserTab').classList.remove('active');
+        document.getElementById('allUsersTab').classList.add('active');
     }
-    
-    function loadDeleteUserFromData(button) {
-        const userId = button.getAttribute('data-user-id');
-        const firstName = button.getAttribute('data-first-name');
-        const lastName = button.getAttribute('data-last-name');
-        const age = button.getAttribute('data-age');
-        const email = button.getAttribute('data-email');
-        const username = button.getAttribute('data-username');
-        
-        document.getElementById('deleteIdDisplay').value = userId;
-        document.getElementById('deleteFirstName').value = firstName;
-        document.getElementById('deleteLastName').value = lastName;
-        document.getElementById('deleteAge').value = age || '';
-        document.getElementById('deleteEmail').value = email;
-        document.getElementById('deleteUsername').value = username;
-        
-        document.getElementById('confirmDelete').onclick = function() {
-            window.location.href = '/admin/delete/' + userId;
-        };
+
+    function showNewUserForm() {
+        document.getElementById('usersTableContainer').style.display = 'none';
+        document.getElementById('newUserFormContainer').style.display = 'block';
+        document.getElementById('allUsersTab').classList.remove('active');
+        document.getElementById('newUserTab').classList.add('active');
     }
+
+    async function loadUsers() {
+        try {
+            const response = await fetch('/api/users', {
+                method: 'GET',
+                credentials: 'same-origin'
+            });
+            if (response.ok) {
+                const users = await response.json();
+                renderUsersTable(users);
+            } else {
+                const tbody = document.querySelector('#usersTable tbody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load users</td></tr>';
+                }
+            }
+        } catch (error) {
+            const tbody = document.querySelector('#usersTable tbody');
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Network error loading users</td></tr>';
+            }
+        }
+    }
+
+    function renderUsersTable(users) {
+        const tbody = document.querySelector('#usersTable tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        if (!users || users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center">No users found</td></tr>';
+            return;
+        }
+
+        users.forEach(user => {
+            const row = document.createElement('tr');
+            const rolesText = user.roles ? user.roles.map(role => `[${role.name}]`).join(' ') : '';
+            row.innerHTML = `
+            <td>${user.id}</td>
+            <td>${user.firstName || ''}</td>
+            <td>${user.lastName || ''}</td>
+            <td>${user.age || ''}</td>
+            <td>${user.email || ''}</td>
+            <td>${rolesText}</td>
+            <td><button class="btn btn-info btn-sm" onclick="editUser(${user.id})">Edit</button></td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteUser(${user.id})">Delete</button></td>
+        `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function editUser(userId) {
+        alert('Edit functionality will be implemented');
+    }
+
+    function deleteUser(userId) {
+        alert('Delete functionality will be implemented');
+    }
+
+    async function loadRoles() {
+        try {
+            const response = await fetch('/api/users/roles', {
+                method: 'GET',
+                credentials: 'same-origin'
+            });
+            if (response.ok) {
+                const roles = await response.json();
+                const roleSelect = document.querySelector('.role-select');
+                if (roleSelect) {
+                    roleSelect.innerHTML = '';
+                    roles.forEach(role => {
+                        const option = document.createElement('option');
+                        option.value = role.id;
+                        option.textContent = role.name;
+                        roleSelect.appendChild(option);
+                    });
+                }
+            }
+        } catch (error) {}
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const newUserForm = document.getElementById('newUserForm');
+        if (newUserForm) {
+            newUserForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const formData = new FormData(newUserForm);
+                const userData = {
+                    firstName: formData.get('firstName'),
+                    lastName: formData.get('lastName'),
+                    age: formData.get('age') ? parseInt(formData.get('age')) : null,
+                    email: formData.get('email'),
+                    username: formData.get('username'),
+                    password: formData.get('password'),
+                    roleIds: formData.getAll('roleIds')
+                };
+                try {
+                    const response = await fetch('/api/users', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify(userData)
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        alert('User created successfully!');
+                        newUserForm.reset();
+                        loadUsers();
+                        showUsersTable();
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('Error creating user: ' + error.message);
+                }
+            });
+        }
+        loadRoles();
+        loadUsers();
+    });
 </script>
 
 </body>

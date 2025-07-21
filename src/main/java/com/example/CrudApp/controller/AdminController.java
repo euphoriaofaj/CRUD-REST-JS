@@ -34,13 +34,15 @@ public class AdminController {
         System.out.println("Email: " + user.getEmail());
         System.out.println("Age: " + user.getAge());
         System.out.println("Role IDs: " + (roleIds != null ? String.join(",", roleIds) : "null"));
-        
+
         if (user.getId() == null) {
+            System.out.println("Creating new user");
             if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
                 user.setUsername(user.getEmail());
             }
             userService.saveUser(user, roleIds);
         } else {
+            System.out.println("Updating existing user");
             userService.updateUser(user, roleIds);
         }
         return "redirect:/admin";

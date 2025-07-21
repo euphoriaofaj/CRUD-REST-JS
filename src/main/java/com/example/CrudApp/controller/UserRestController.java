@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,32 +20,22 @@ public class UserRestController {
     @Autowired
     private UserService userService;
 
-    @GetMapping
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<User>> getAllUsers() {
-        System.out.println("=== GET /api/users called ===");
         try {
             List<User> users = userService.getAllUsers();
-            System.out.println("Found " + users.size() + " users");
-            for (User user : users) {
-                System.out.println("User: " + user.getUsername() + ", Roles: " + user.getRoles());
-            }
             return ResponseEntity.ok(users);
         } catch (Exception e) {
-            System.out.println("Error getting users: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        System.out.println("=== GET /api/users/" + id + " called ===");
         User user = userService.getUserById(id);
         if (user != null) {
-            System.out.println("User found: " + user.getUsername());
             return ResponseEntity.ok(user);
         }
-        System.out.println("User not found with ID: " + id);
         return ResponseEntity.notFound().build();
     }
 
@@ -52,10 +43,6 @@ public class UserRestController {
     public ResponseEntity<Map<String, Object>> createUser(@RequestBody UserRequest userRequest) {
         Map<String, Object> response = new HashMap<>();
         try {
-            System.out.println("=== POST /api/users called ===");
-            System.out.println("Creating user: " + userRequest.getUsername());
-            System.out.println("Password provided: " + (userRequest.getPassword() != null && !userRequest.getPassword().trim().isEmpty()));
-
             if (userRequest.getUsername() == null || userRequest.getUsername().trim().isEmpty()) {
                 response.put("success", false);
                 response.put("message", "Username is required");
@@ -70,7 +57,6 @@ public class UserRestController {
 
             User existingUser = userService.getUserByUsername(userRequest.getUsername());
             if (existingUser != null) {
-                System.out.println("Username already exists: " + userRequest.getUsername());
                 response.put("success", false);
                 response.put("message", "Username already exists");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -79,7 +65,6 @@ public class UserRestController {
             if (userRequest.getEmail() != null && !userRequest.getEmail().trim().isEmpty()) {
                 User existingEmailUser = userService.getUserByEmail(userRequest.getEmail());
                 if (existingEmailUser != null) {
-                    System.out.println("Email already exists: " + userRequest.getEmail());
                     response.put("success", false);
                     response.put("message", "Email already exists");
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -94,15 +79,12 @@ public class UserRestController {
             user.setUsername(userRequest.getUsername());
             user.setPassword(userRequest.getPassword());
 
-            System.out.println("Saving user with roles: " + (userRequest.getRoleIds() != null ? String.join(",", userRequest.getRoleIds()) : "null"));
             userService.saveUser(user, userRequest.getRoleIds());
 
             response.put("success", true);
             response.put("message", "User created successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.out.println("Error creating user: " + e.getMessage());
-            e.printStackTrace();
             response.put("success", false);
             response.put("message", "Error creating user: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -113,7 +95,6 @@ public class UserRestController {
     public ResponseEntity<Map<String, Object>> updateUser(@PathVariable Long id, @RequestBody UserRequest userRequest) {
         Map<String, Object> response = new HashMap<>();
         try {
-            System.out.println("=== PUT /api/users/" + id + " called ===");
             User user = userService.getUserById(id);
             if (user == null) {
                 response.put("success", false);
@@ -138,8 +119,6 @@ public class UserRestController {
             response.put("user", user);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.out.println("Error updating user: " + e.getMessage());
-            e.printStackTrace();
             response.put("success", false);
             response.put("message", "Error updating user: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -150,7 +129,6 @@ public class UserRestController {
     public ResponseEntity<Map<String, Object>> deleteUser(@PathVariable Long id) {
         Map<String, Object> response = new HashMap<>();
         try {
-            System.out.println("=== DELETE /api/users/" + id + " called ===");
             User user = userService.getUserById(id);
             if (user == null) {
                 response.put("success", false);
@@ -164,20 +142,20 @@ public class UserRestController {
             response.put("message", "User deleted successfully");
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.out.println("Error deleting user: " + e.getMessage());
-            e.printStackTrace();
             response.put("success", false);
             response.put("message", "Error deleting user: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 
-    @GetMapping("/roles")
+    @GetMapping(value = "/roles", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Role>> getAllRoles() {
-        System.out.println("=== GET /api/users/roles called ===");
-        List<Role> roles = userService.getAllRoles();
-        System.out.println("Found " + roles.size() + " roles");
-        return ResponseEntity.ok(roles);
+        try {
+            List<Role> roles = userService.getAllRoles();
+            return ResponseEntity.ok(roles);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     public static class UserRequest {

@@ -43,13 +43,10 @@ class AdminPanel {
     renderUsersTable() {
         const tbody = document.querySelector('#usersTable tbody');
         if (!tbody) return;
-
         tbody.innerHTML = '';
-
         this.users.forEach(user => {
             const row = document.createElement('tr');
             const rolesText = user.roles ? user.roles.map(role => `[${role.name}]`).join(' ') : '';
-
             row.innerHTML = `
                 <td>${user.id}</td>
                 <td>${user.firstName || ''}</td>
@@ -105,10 +102,8 @@ class AdminPanel {
 
     async handleUserSubmit(event, isEdit = false) {
         event.preventDefault();
-
         const form = event.target;
         const formData = new FormData(form);
-
         const userData = {
             firstName: formData.get('firstName'),
             lastName: formData.get('lastName'),
@@ -145,7 +140,6 @@ class AdminPanel {
                 this.showAlert(result.message, 'success');
                 await this.loadUsers();
                 form.reset();
-
                 if (isEdit) {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
                     modal.hide();
@@ -163,9 +157,7 @@ class AdminPanel {
     async editUser(userId) {
         const user = this.users.find(u => u.id === userId);
         if (!user) return;
-
         this.currentEditingUserId = userId;
-
         document.getElementById('editId').value = user.id;
         document.getElementById('editIdDisplay').value = user.id;
         document.getElementById('editFirstName').value = user.firstName || '';
@@ -174,12 +166,10 @@ class AdminPanel {
         document.getElementById('editEmail').value = user.email || '';
         document.getElementById('editUsername').value = user.username || '';
         document.getElementById('editPassword').value = '';
-
         const roleSelect = document.getElementById('editRole');
         Array.from(roleSelect.options).forEach(option => {
             option.selected = user.roles && user.roles.some(role => role.id == option.value);
         });
-
         const modal = new bootstrap.Modal(document.getElementById('editModal'));
         modal.show();
     }
@@ -187,19 +177,15 @@ class AdminPanel {
     async deleteUser(userId) {
         const user = this.users.find(u => u.id === userId);
         if (!user) return;
-
         document.getElementById('deleteIdDisplay').value = user.id;
         document.getElementById('deleteFirstName').value = user.firstName || '';
         document.getElementById('deleteLastName').value = user.lastName || '';
         document.getElementById('deleteAge').value = user.age || '';
         document.getElementById('deleteEmail').value = user.email || '';
         document.getElementById('deleteUsername').value = user.username || '';
-
         const rolesText = user.roles ? user.roles.map(role => `[${role.name}]`).join(' ') : '';
         document.getElementById('deleteRole').value = rolesText;
-
         document.getElementById('confirmDelete').onclick = () => this.confirmDelete(userId);
-
         const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
         modal.show();
     }
@@ -209,9 +195,7 @@ class AdminPanel {
             const response = await fetch(`/api/users/${userId}`, {
                 method: 'DELETE'
             });
-
             const result = await response.json();
-
             if (result.success) {
                 this.showAlert(result.message, 'success');
                 await this.loadUsers();
@@ -242,17 +226,14 @@ class AdminPanel {
     showAlert(message, type) {
         const existingAlerts = document.querySelectorAll('.alert');
         existingAlerts.forEach(alert => alert.remove());
-
         const alert = document.createElement('div');
         alert.className = `alert alert-${type} alert-dismissible fade show`;
         alert.innerHTML = `
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
-
         const mainContent = document.querySelector('.main-content');
         mainContent.insertBefore(alert, mainContent.firstChild);
-
         setTimeout(() => {
             if (alert.parentNode) {
                 alert.remove();
