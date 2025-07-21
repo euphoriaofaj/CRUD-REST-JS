@@ -1,6 +1,5 @@
 package com.example.CrudApp.config;
 
-
 import com.example.CrudApp.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -50,6 +49,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/user/**").hasAnyAuthority("USER", "ADMIN")
                         .requestMatchers("/user").hasAnyAuthority("USER", "ADMIN")
                         .requestMatchers("/login", "/css/**", "/js/**", "/error").permitAll()
+                        .requestMatchers("/api/**").hasAnyAuthority("USER", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -66,7 +66,6 @@ public class WebSecurityConfig {
                         .permitAll()
                 )
                 .csrf(csrf -> csrf.disable());
-
         return http.build();
     }
 }
