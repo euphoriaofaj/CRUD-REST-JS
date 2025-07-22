@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -25,6 +26,7 @@ public class DataInit implements CommandLineRunner {
     private PasswordEncoder passwordEncoder;
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         Role adminRole = roleRepository.findByName("ADMIN");
         Role userRole = roleRepository.findByName("USER");
@@ -33,34 +35,34 @@ public class DataInit implements CommandLineRunner {
             adminRole = new Role();
             adminRole.setName("ADMIN");
             adminRole = roleRepository.save(adminRole);
-
         }
 
         if (userRole == null) {
             userRole = new Role();
             userRole.setName("USER");
             userRole = roleRepository.save(userRole);
-
         }
 
         User existingAdmin = userRepository.findByUsername("admin");
-        if (existingAdmin != null) {
-            userRepository.delete(existingAdmin);
+        if (existingAdmin == null) {
+            User admin = new User();
+            admin.setUsername("admin");
+            admin.setPassword(passwordEncoder.encode("admin"));
+            admin.setFirstName("Admin");
+            admin.setLastName("User");
+            admin.setEmail("admin@example.com");
+
+            Set<Role> roles = new HashSet<>();
+            roles.add(adminRole);
+            admin.setRoles(roles);
+
+            userRepository.save(admin);
+        } else {
+            String encodedPassword = passwordEncoder.encode("admin");
+            if (!passwordEncoder.matches("admin", existingAdmin.getPassword())) {
+                existingAdmin.setPassword(encodedPassword);
+                userRepository.save(existingAdmin);
+            }
         }
-
-        User admin = new User();
-        admin.setUsername("admin");
-        admin.setPassword(passwordEncoder.encode("admin"));
-        admin.setFirstName("Admin");
-        admin.setLastName("User");
-        admin.setEmail("admin@example.com");
-
-        Set<Role> roles = new HashSet<>();
-        roles.add(adminRole);
-        admin.setRoles(roles);
-
-        admin = userRepository.save(admin);
-        System.out.println("Admin user created: username=admin, password=admin");
-        System.out.println("Admin roles: " + admin.getRoles());
     }
 }
