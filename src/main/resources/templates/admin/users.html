@@ -22,6 +22,13 @@
         #newUserFormContainer {
             display: none;
         }
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .alert {
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -52,6 +59,9 @@
 
         <div class="col-md-10 main-content">
             <h2>Admin panel</h2>
+
+            <div id="alertContainer"></div>
+
             <ul class="nav nav-tabs mb-4">
                 <li class="nav-item">
                     <a class="nav-link active" href="#" id="allUsersTab" onclick="showUsersTable()">All Users</a>
@@ -79,7 +89,12 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td colspan="8" class="text-center">Loading users...</td>
+                            <td colspan="8" class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                Loading users...
+                            </td>
                         </tr>
                         </tbody>
                     </table>
@@ -103,12 +118,12 @@
 
                             <div class="mb-3">
                                 <label for="age" class="form-label">Age</label>
-                                <input type="number" class="form-control" id="age" name="age">
+                                <input type="number" class="form-control" id="age" name="age" min="1" max="150">
                             </div>
 
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" name="email">
+                                <input type="email" class="form-control" id="email" name="email" required>
                             </div>
 
                             <div class="mb-3">
@@ -118,16 +133,21 @@
 
                             <div class="mb-3">
                                 <label for="password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
+                                <input type="password" class="form-control" id="password" name="password" required minlength="4">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Role</label>
-                                <select class="form-select role-select" name="roleIds" multiple size="2"></select>
+                                <select class="form-select" id="roleSelect" name="roleIds" multiple size="2" required>
+                                </select>
+                                <div class="form-text">Hold Ctrl (Cmd on Mac) to select multiple roles</div>
                             </div>
 
                             <div class="d-grid">
-                                <button type="submit" class="btn btn-success">Add new user</button>
+                                <button type="submit" class="btn btn-success">
+                                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                    Add new user
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -147,42 +167,58 @@
             <form id="editUserForm">
                 <div class="modal-body">
                     <input type="hidden" id="editId" name="id">
+
                     <div class="mb-3">
                         <label class="form-label">ID</label>
                         <input type="text" class="form-control" id="editIdDisplay" readonly>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">First Name</label>
                         <input type="text" class="form-control" id="editFirstName" name="firstName" required>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Last Name</label>
                         <input type="text" class="form-control" id="editLastName" name="lastName" required>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Age</label>
-                        <input type="number" class="form-control" id="editAge" name="age">
+                        <input type="number" class="form-control" id="editAge" name="age" min="1" max="150">
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Email</label>
-                        <input type="email" class="form-control" id="editEmail" name="email">
+                        <input type="email" class="form-control" id="editEmail" name="email" required>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Username</label>
                         <input type="text" class="form-control" id="editUsername" name="username" required readonly>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Password</label>
-                        <input type="password" class="form-control" id="editPassword" name="password" placeholder="Leave blank to keep current password">
+                        <input type="password" class="form-control" id="editPassword" name="password" placeholder="Leave blank to keep current password" minlength="4">
+                        <div class="form-text"><div>
                     </div>
+
                     <div class="mb-3">
                         <label class="form-label">Role</label>
-                        <select class="form-select role-select" id="editRole" name="roleIds" multiple></select>
+                        <select class="form-select" id="editRole" name="roleIds" multiple size="2" required>
+                        </select>
+                        <div class="form-text"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Edit</button>
+                    <button type="submit" class="btn btn-primary">
+                        <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        Edit
+                    </button>
+                </div>
+            </div>
                 </div>
             </form>
         </div>
@@ -197,18 +233,56 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="text" class="form-control mb-2" id="deleteIdDisplay" readonly>
-                <input type="text" class="form-control mb-2" id="deleteFirstName" readonly>
-                <input type="text" class="form-control mb-2" id="deleteLastName" readonly>
-                <input type="text" class="form-control mb-2" id="deleteAge" readonly>
-                <input type="text" class="form-control mb-2" id="deleteEmail" readonly>
-                <input type="text" class="form-control mb-2" id="deleteUsername" readonly>
-                <input type="password" class="form-control mb-2" value="••••••••" readonly>
-                <input type="text" class="form-control mb-2" id="deleteRole" readonly>
+                <div class="alert alert-warning">
+                    <strong>Warning!</strong>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">ID</label>
+                    <input type="text" class="form-control" id="deleteIdDisplay" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">First Name</label>
+                    <input type="text" class="form-control" id="deleteFirstName" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" class="form-control" id="deleteLastName" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Age</label>
+                    <input type="text" class="form-control" id="deleteAge" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="text" class="form-control" id="deleteEmail" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-control" id="deleteUsername" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-control" value="••••••••" readonly>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <input type="text" class="form-control" id="deleteRole" readonly>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">
+                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    Delete
+                </button>
             </div>
         </div>
     </div>
@@ -216,46 +290,103 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    console.log('=== ADMIN PAGE DEBUG ===');
+    console.log('Page loaded, initializing...');
+
+    let currentUsers = [];
+    let currentRoles = [];
+    let editModal, deleteModal;
+
+    function showAlert(message, type = 'info') {
+        const alertContainer = document.getElementById('alertContainer');
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show`;
+        alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+        alertContainer.appendChild(alert);
+
+
+    }
+
+    function setLoading(element, isLoading) {
+        const spinner = element.querySelector('.spinner-border');
+        if (spinner) {
+            spinner.classList.toggle('d-none', !isLoading);
+        }
+        element.disabled = isLoading;
+    }
+
     function showUsersTable() {
+        console.log('Showing users table');
         document.getElementById('newUserFormContainer').style.display = 'none';
         document.getElementById('usersTableContainer').style.display = 'block';
+
         document.getElementById('newUserTab').classList.remove('active');
         document.getElementById('allUsersTab').classList.add('active');
+
+        loadUsers();
     }
 
     function showNewUserForm() {
+        console.log('Showing new user form');
         document.getElementById('usersTableContainer').style.display = 'none';
         document.getElementById('newUserFormContainer').style.display = 'block';
+
         document.getElementById('allUsersTab').classList.remove('active');
         document.getElementById('newUserTab').classList.add('active');
+
+        loadRoles();
+    }
+
+        async function apiRequest(url, options = {}) {
+        const defaultOptions = {
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        };
+
+        const response = await fetch(url, { ...defaultOptions, ...options });
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        }
+
+        return data;
     }
 
     async function loadUsers() {
+        console.log('Loading users...');
+        const tbody = document.querySelector('#usersTable tbody');
+
         try {
-            const response = await fetch('/api/users', {
-                method: 'GET',
-                credentials: 'same-origin'
-            });
-            if (response.ok) {
-                const users = await response.json();
-                renderUsersTable(users);
-            } else {
-                const tbody = document.querySelector('#usersTable tbody');
-                if (tbody) {
-                    tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Failed to load users</td></tr>';
-                }
-            }
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div> Loading users...</td></tr>';
+
+            const users = await apiRequest('/api/users');
+            console.log('Users loaded:', users);
+
+            currentUsers = Array.isArray(users) ? users : [];
+            renderUsersTable(currentUsers);
+
         } catch (error) {
-            const tbody = document.querySelector('#usersTable tbody');
-            if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">Network error loading users</td></tr>';
-            }
+            console.error('Error loading users:', error);
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error loading users: ${error.message}</td></tr>`;
+            showAlert(`Error loading users: ${error.message}`, 'danger');
         }
     }
 
     function renderUsersTable(users) {
+        console.log('Rendering users table with', users.length, 'users');
         const tbody = document.querySelector('#usersTable tbody');
-        if (!tbody) return;
+
+        if (!tbody) {
+            console.error('Users table tbody not found!');
+            return;
+        }
 
         tbody.innerHTML = '';
 
@@ -266,92 +397,284 @@
 
         users.forEach(user => {
             const row = document.createElement('tr');
-            const rolesText = user.roles ? user.roles.map(role => `[${role.name}]`).join(' ') : '';
+            const rolesText = user.roles && user.roles.length > 0
+                ? user.roles.map(role => `[${role.name || role}]`).join(' ')
+                : '[No roles]';
+
             row.innerHTML = `
             <td>${user.id}</td>
-            <td>${user.firstName || ''}</td>
-            <td>${user.lastName || ''}</td>
+            <td>${escapeHtml(user.firstName || '')}</td>
+            <td>${escapeHtml(user.lastName || '')}</td>
             <td>${user.age || ''}</td>
-            <td>${user.email || ''}</td>
+            <td>${escapeHtml(user.email || '')}</td>
             <td>${rolesText}</td>
-            <td><button class="btn btn-info btn-sm" onclick="editUser(${user.id})">Edit</button></td>
-            <td><button class="btn btn-danger btn-sm" onclick="deleteUser(${user.id})">Delete</button></td>
+            <td>
+                <button class="btn btn-info btn-sm" onclick="editUser(${user.id})" title="Edit user">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+            </td>
+            <td>
+                <button class="btn btn-danger btn-sm" onclick="deleteUser(${user.id})" title="Delete user">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </td>
         `;
             tbody.appendChild(row);
         });
+
+        console.log('Users table rendered successfully');
     }
 
-    function editUser(userId) {
-        alert('Edit functionality will be implemented');
-    }
-
-    function deleteUser(userId) {
-        alert('Delete functionality will be implemented');
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
     }
 
     async function loadRoles() {
+        console.log('Loading roles...');
         try {
-            const response = await fetch('/api/users/roles', {
-                method: 'GET',
-                credentials: 'same-origin'
-            });
-            if (response.ok) {
-                const roles = await response.json();
-                const roleSelect = document.querySelector('.role-select');
-                if (roleSelect) {
-                    roleSelect.innerHTML = '';
-                    roles.forEach(role => {
-                        const option = document.createElement('option');
-                        option.value = role.id;
-                        option.textContent = role.name;
-                        roleSelect.appendChild(option);
-                    });
-                }
-            }
-        } catch (error) {}
+            const roles = await apiRequest('/api/users/roles');
+            console.log('Roles loaded:', roles);
+
+            currentRoles = Array.isArray(roles) ? roles : [];
+            populateRoleSelects();
+
+        } catch (error) {
+            console.error('Error loading roles:', error);
+            showAlert(`Error loading roles: ${error.message}`, 'danger');
+        }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    function populateRoleSelects() {
+        const roleSelects = document.querySelectorAll('#roleSelect, #editRole');
+
+        roleSelects.forEach(select => {
+            select.innerHTML = '';
+            currentRoles.forEach(role => {
+                const option = document.createElement('option');
+                option.value = role.id;
+                option.textContent = role.name;
+                select.appendChild(option);
+            });
+        });
+    }
+
+    async function editUser(userId) {
+        console.log('Edit user:', userId);
+
+        const user = currentUsers.find(u => u.id === userId);
+        if (!user) {
+            showAlert('User not found', 'danger');
+            return;
+        }
+
+        try {
+            if (currentRoles.length === 0) {
+                await loadRoles();
+            }
+
+            document.getElementById('editId').value = user.id;
+            document.getElementById('editIdDisplay').value = user.id;
+            document.getElementById('editFirstName').value = user.firstName || '';
+            document.getElementById('editLastName').value = user.lastName || '';
+            document.getElementById('editAge').value = user.age || '';
+            document.getElementById('editEmail').value = user.email || '';
+            document.getElementById('editUsername').value = user.username || '';
+            document.getElementById('editPassword').value = '';
+
+            const roleSelect = document.getElementById('editRole');
+            if (roleSelect && user.roles) {
+                Array.from(roleSelect.options).forEach(option => {
+                    const isSelected = user.roles.some(role =>
+                        (typeof role === 'object' ? role.id : role) == option.value
+                    );
+                    option.selected = isSelected;
+                });
+            }
+
+            if (!editModal) {
+                editModal = new bootstrap.Modal(document.getElementById('editModal'));
+            }
+            editModal.show();
+
+        } catch (error) {
+            console.error('Error preparing edit form:', error);
+            showAlert(`Error preparing edit form: ${error.message}`, 'danger');
+        }
+    }
+
+    async function deleteUser(userId) {
+        console.log('Delete user:', userId);
+
+        const user = currentUsers.find(u => u.id === userId);
+        if (!user) {
+            showAlert('User not found', 'danger');
+            return;
+        }
+
+        document.getElementById('deleteIdDisplay').value = user.id;
+        document.getElementById('deleteFirstName').value = user.firstName || '';
+        document.getElementById('deleteLastName').value = user.lastName || '';
+        document.getElementById('deleteAge').value = user.age || '';
+        document.getElementById('deleteEmail').value = user.email || '';
+        document.getElementById('deleteUsername').value = user.username || '';
+
+        const rolesText = user.roles && user.roles.length > 0
+            ? user.roles.map(role => `[${role.name || role}]`).join(' ')
+            : '[No roles]';
+        document.getElementById('deleteRole').value = rolesText;
+
+        const confirmBtn = document.getElementById('confirmDelete');
+        confirmBtn.onclick = () => confirmDelete(userId);
+
+        if (!deleteModal) {
+            deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        }
+        deleteModal.show();
+    }
+
+    async function confirmDelete(userId) {
+        const confirmBtn = document.getElementById('confirmDelete');
+
+        try {
+            setLoading(confirmBtn, true);
+
+            const result = await apiRequest(`/api/users/${userId}`, {
+                method: 'DELETE'
+            });
+
+
+
+            await loadUsers();
+
+            if (deleteModal) {
+                deleteModal.hide();
+            }
+
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            showAlert(`Error deleting user: ${error.message}`, 'danger');
+        } finally {
+            setLoading(confirmBtn, false);
+        }
+    }
+
+    function initializeFormHandlers() {
         const newUserForm = document.getElementById('newUserForm');
         if (newUserForm) {
             newUserForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
-                const formData = new FormData(newUserForm);
-                const userData = {
-                    firstName: formData.get('firstName'),
-                    lastName: formData.get('lastName'),
-                    age: formData.get('age') ? parseInt(formData.get('age')) : null,
-                    email: formData.get('email'),
-                    username: formData.get('username'),
-                    password: formData.get('password'),
-                    roleIds: formData.getAll('roleIds')
-                };
+
+                const submitBtn = newUserForm.querySelector('button[type="submit"]');
+
                 try {
-                    const response = await fetch('/api/users', {
+                    setLoading(submitBtn, true);
+
+                    const formData = new FormData(newUserForm);
+                    const userData = {
+                        firstName: formData.get('firstName'),
+                        lastName: formData.get('lastName'),
+                        age: formData.get('age') ? parseInt(formData.get('age')) : null,
+                        email: formData.get('email'),
+                        username: formData.get('username'),
+                        password: formData.get('password'),
+                        roleIds: formData.getAll('roleIds').map(id => parseInt(id))
+                    };
+
+
+                    const result = await apiRequest('/api/users', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        credentials: 'same-origin',
                         body: JSON.stringify(userData)
                     });
-                    const result = await response.json();
-                    if (result.success) {
-                        alert('User created successfully!');
-                        newUserForm.reset();
-                        loadUsers();
-                        showUsersTable();
-                    } else {
-                        alert('Error: ' + result.message);
-                    }
+
+                    console.log('Create user response:', result);
+
+                    newUserForm.reset();
+                    showUsersTable();
+
                 } catch (error) {
-                    alert('Error creating user: ' + error.message);
+                    console.error('Error creating user:', error);
+                    showAlert(`Error creating user: ${error.message}`, 'danger');
+                } finally {
+                    setLoading(submitBtn, false);
                 }
             });
         }
-        loadRoles();
+
+        const editUserForm = document.getElementById('editUserForm');
+        if (editUserForm) {
+            editUserForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const submitBtn = editUserForm.querySelector('button[type="submit"]');
+
+                try {
+                    setLoading(submitBtn, true);
+
+                    const formData = new FormData(editUserForm);
+                    const userId = formData.get('id');
+                    const userData = {
+                        firstName: formData.get('firstName'),
+                        lastName: formData.get('lastName'),
+                        age: formData.get('age') ? parseInt(formData.get('age')) : null,
+                        email: formData.get('email'),
+                        username: formData.get('username'),
+                        roleIds: formData.getAll('roleIds').map(id => parseInt(id))
+                    };
+
+                    const password = formData.get('password');
+                    if (password && password.trim()) {
+                        userData.password = password;
+                    }
+
+
+                    const result = await apiRequest(`/api/users/${userId}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(userData)
+                    });
+
+                    console.log('Update user response:', result);
+
+                    await loadUsers();
+
+                    if (editModal) {
+                        editModal.hide();
+                    }
+
+                } catch (error) {
+                    console.error('Error updating user:', error);
+                    showAlert(`Error updating user: ${error.message}`, 'danger');
+                } finally {
+                    setLoading(submitBtn, false);
+                }
+            });
+        }
+    }
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+
+
+        initializeFormHandlers();
+
+
         loadUsers();
+        loadRoles();
+
+
     });
+
+    window.showUsersTable = showUsersTable;
+    window.showNewUserForm = showNewUserForm;
+    window.editUser = editUser;
+    window.deleteUser = deleteUser;
 </script>
 
 </body>
